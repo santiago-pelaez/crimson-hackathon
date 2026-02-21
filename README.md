@@ -1,11 +1,11 @@
-# Aegis Labyrinth (OLED Edition)
+# Aegis Labyrinth (LCD Edition)
 **Reinvent the firewall into a physical, agentic guardian.**
 
 Aegis Labyrinth is a hackathon MVP that combines:
 - **Selective Freeze**: only sensitive admin actions “lock”
 - **Deception (Labyrinth honeypot)**: suspicious users get routed into a decoy admin panel
 - **Physical authorization**: a **real button** on a Raspberry Pi unlocks the admin vault
-- **Hardware visibility**: a **small OLED** displays threat level + state in real time
+- **Hardware visibility**: a **Grove LCD RGB Backlight** shows threat level + state in real time
 - **Optional agentic AI**: CrewAI/LLM generates explanations & incident reports
 
 Theme: **REINVENT THE WHEEL**  
@@ -25,7 +25,7 @@ Admin has sensitive actions (fake but realistic):
 
 When a suspicious scenario is detected, the system triggers a **Vault Freeze**:
 - React admin shows a premium blur overlay: “Physical Auth Required”
-- OLED shows `LOCKED` + `Threat: XX/100`
+- The Raspberry Pi device’s **LCD shows `LOCKED` + `Threat: XX/100`**
 - Pressing the **physical button** unlocks for a short window (e.g., 60 seconds)
 
 ### 3) Labyrinth honeypot (`/labyrinth/admin`)
@@ -40,11 +40,13 @@ Suspicious users are redirected to a decoy admin panel that:
 You already have: Raspberry Pi, power supply, microSD, breadboard, USB→Ethernet.
 
 You still need:
-- **I2C OLED display** (recommended: SSD1306 128×64, 0.96")
-- **Momentary push button** (tactile)
-- **Dupont jumper wires** (female↔female + female↔male, depending on OLED pins)
-- Optional: **LED + 220–330Ω resistor** for ambient status
-- (Bring-up recommended) microSD reader + HDMI/keyboard for initial setup
+- **Grove LCD RGB Backlight v4.0** (I2C) + cable/adapter to connect to Pi I2C
+- **Momentary push button** (tactile) (or Grove button module)
+- **Jumper wires** / Grove-to-Dupont adapter (depending on whether you have a Grove Base HAT)
+- (Bring-up recommended) HDMI/keyboard for debugging (headless is possible)
+
+> If you have a Grove Base HAT for Raspberry Pi, wiring is plug-and-play (recommended).
+> Without a HAT, you’ll need a Grove-to-Dupont cable or an equivalent adapter.
 
 ---
 
@@ -71,7 +73,10 @@ Suggested endpoints:
 
 ### Hardware daemon (Python on the Pi)
 - polls `/api/status`
-- updates OLED display (SAFE / INVESTIGATING / LOCKED + threat)
+- updates the Grove LCD text + RGB backlight
+  - SAFE → green
+  - WARNING → yellow/blue (team choice)
+  - LOCKED → red + “Press button”
 - on button press → `POST /api/unlock`
 
 ### Optional AI (CrewAI/LLM)
