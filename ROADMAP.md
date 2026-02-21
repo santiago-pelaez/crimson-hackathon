@@ -1,43 +1,48 @@
-# Aegis Labyrinth — Implementation Roadmap (OLED + Button)
+# Aegis Labyrinth — Implementation Roadmap (Grove LCD + Button)
 This roadmap is designed for a **24-hour hackathon**. The rule is: **build one working end-to-end loop early**, then add intelligence and polish.
 
 ---
 
 ## Key MVP loop (must work early)
-**Backend locks → Admin overlay appears → OLED shows LOCKED → physical button unlocks → overlay disappears.**
+**Backend locks → Admin overlay appears → LCD shows LOCKED (red backlight) → physical button unlocks → overlay disappears.**
 
 If you accomplish only this + basic logs, you already have a strong demo.
 
 ---
 
 ## Decisions to lock (do these first)
-1) OLED type: **I2C SSD1306 128×64** (recommended)
-2) Networking: use **Ethernet** via USB→Ethernet, or a controlled hotspot/router
-3) Unlock window: **60 seconds** (recommended)
-4) Detection: start **rule-based**, add AI later
-5) CrewAI: **stretch goal** unless you already know it well
-6) Email: **stretch goal** (show report on dashboard first)
+1) LCD: **Grove LCD RGB Backlight v4.0** (I2C)
+2) Connection method:
+   - **Preferred:** Grove Base HAT (plug into I2C port)
+   - **Alternative:** Grove-to-Dupont adapter cable to Pi I2C pins
+3) Networking: use **Ethernet** via USB→Ethernet, or a controlled hotspot/router
+4) Unlock window: **60 seconds** (recommended)
+5) Detection: start **rule-based**, add AI later
+6) CrewAI + email: **stretch goals**
 
 ---
 
 ## Phase 0 — Hardware bring-up (Hour 0–1.5)
 ### Goal
-Prove OLED + button works on the Pi.
+Prove the LCD + button works on the Pi.
 
 ### Tasks
 - Flash Raspberry Pi OS to microSD
 - Boot Pi, enable SSH
-- Enable I2C (if OLED is I2C)
-- Wire OLED (VCC, GND, SDA, SCL)
-- Run an OLED “hello world”
-- Wire button to GPIO (recommended: GPIO + GND with internal pull-up)
+- Enable I2C (`raspi-config`)
+- Connect the Grove LCD to I2C
+- Run an LCD “hello world”:
+  - display: `SYSTEM READY`
+  - backlight: green
+- Wire the button to GPIO (recommended: GPIO + GND with internal pull-up)
 - Run a button test (prints when pressed)
 
 ### Checkpoint
-- OLED displays text reliably
+- LCD displays text reliably
+- Backlight color can be changed
 - Button press is detected reliably
 
-> If this fails, fix it now. Don’t proceed until hardware is stable.
+> If LCD isn’t detected, stop and solve I2C/addressing before building anything else.
 
 ---
 
@@ -49,6 +54,7 @@ Get the MVP loop working without AI or honeypot.
 Implement in-memory state:
 - `locked: bool`
 - `threat_level: int`
+- `message: str`
 - `unlocked_until: float | null`
 - `events: list`
 
@@ -66,16 +72,20 @@ Endpoints:
   - message: “Physical Auth Required. Press Aegis button.”
 
 ### Hardware daemon (Pi)
-- Poll `GET /api/status` every 1s
-- Render OLED:
-  - `State: SAFE|LOCKED`
-  - `Threat: XX/100`
-  - `Press button to unlock` when locked
+- Poll `GET /api/status` every 1s (or update only on changes)
+- Update LCD:
+  - Text (16×2):
+    - Line1: `SAFE/WARN/LOCK  T:###`
+    - Line2: short message (`Press Button`)
+  - Backlight:
+    - SAFE → green
+    - WARNING → yellow/blue
+    - LOCKED → red
 - On button press: `POST /api/unlock`
 
 ### Checkpoint
-- Clicking “Lock” (or calling `/api/lock`) locks admin UI + OLED updates
-- Pressing button unlocks within ~1 second
+- Trigger lock → admin overlay appears + LCD turns red and shows LOCKED
+- Press button → unlocks within ~1 second and LCD returns to green SAFE
 
 ---
 
@@ -133,9 +143,6 @@ Add deception: a decoy admin to trap suspicious users.
   - fake actions (export/delete)
 - Log every honeypot interaction
 
-### Routing rule (simple MVP)
-- When `locked=true`, redirect suspicious flows from “real admin action” → labyrinth pages (or show a link)
-
 ### Checkpoint
 - Attacker can interact with decoy
 - Defender sees events + rising threat score
@@ -148,13 +155,13 @@ System locks itself based on suspicious behavior.
 
 ### Start rule-based
 Signals:
-- “new IP”
-- “odd hour”
-- “too many attempts quickly”
-- “honeypot interaction”
+- new IP
+- odd hour
+- too many attempts quickly
+- honeypot interaction
 
 Rule:
-- If score exceeds threshold → `locked=true`, threat_level high, log the reason
+- If score exceeds threshold → lock, raise threat_level, log the reason
 
 ### Checkpoint
 - You can trigger lock reliably by a scripted sequence
@@ -189,8 +196,8 @@ A stable demo that works twice in a row.
 1) Show `/` (still online)
 2) Show `/admin` normal
 3) Trigger suspicious action → lock overlay appears
-4) OLED shows LOCKED + threat
-5) Press physical button → unlock
+4) LCD turns red and displays `LOCKED` + threat
+5) Press physical button → unlock and LCD returns to SAFE
 6) Optional: show honeypot + logs + AI report
 
 ---
@@ -202,5 +209,5 @@ Cut in this order:
 3) Fancy honeypot depth (keep 1–2 decoy pages)
 Keep:
 - lock/unlock loop
-- OLED + button
+- LCD + button
 - overlay + logs
