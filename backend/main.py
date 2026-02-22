@@ -24,12 +24,24 @@ except Exception:
 
 ####### Establishing varibles etc. #######
 
-load_dotenv() 
+# Replace the old load_dotenv() with this:
+load_dotenv(r"C:\Users\chika\OneDrive\Documents\crimson-hackathon\aegis-backend\.env")
+
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL ="gemini-2.5-flash" 
 LOG_FILE = os.path.join(os.path.dirname(__file__), "logs.json")
 
 app = FastAPI()
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows your React app to connect
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 _state_lock = threading.Lock()
 ####### ENd of establishing base varibles #######
@@ -40,8 +52,10 @@ _state_lock = threading.Lock()
 #pydantic data
 system_state = {
     "is_locked": False,
-    "threat_level": 0,
-    "ai_thoughts": "System monitoring for threats . . . . . . ",
+    "threat_score": 0,
+    "queue_status": "Green", # Green, Yellow, Red
+    "ai_thoughts": "System monitoring...",
+    "pending_approvals": [] # For your manual review feature
 }
 
 def _read_logs(max_lines: int = 200) -> List[Dict]:
@@ -66,56 +80,45 @@ class SecurityAnalysis(BaseModel):
 
 
 def run_security_check(timeout_seconds: int = 15) -> Dict:
-    logs = _read_logs(200)
-    snippet = json.dumps(logs[-100:], ensure_ascii=False, indent=2)
-
-    MAX_CHARS = 12000
-    if len(snippet) > MAX_CHARS:
-        snippet = snippet[-MAX_CHARS:]
-
-    detected = False
-    summary = "Analysis failed."
+    logs = _read_logs(100)
+    snippet = json.dumps(logs, ensure_ascii=False, indent=2)
 
     if not gemini_api_key or not ChatGoogleGenerativeAI:
-        summary = "AI not configured; using heuristic fallback."
-    else:
-        try:
-            # Initializes model
-            model = ChatGoogleGenerativeAI(api_key=gemini_api_key, model=GEMINI_MODEL, temperature=0)
+        return {"detected_hack": False, "summary": "AI Configuration Error"}
 
-            # 1. Attemp: the structered output
-            try:
-                structured = model.with_structured_output(SecurityAnalysis)
-                result = structured.invoke([
-                    SystemMessage(content="You are a security sentry. Return JSON {detected_hack,summary}."),
-                    HumanMessage(content=f"Analyze these recent logs:\n\n{snippet}")
-                ])
-                
-                detected = bool(result.detected_hack)
-                summary = str(result.summary)
-            except Exception:
-                # Plan B: Fallback to plain text if structured fails
-                resp = model.invoke([
-                    SystemMessage(content="You are a security sentry. Respond in plain text."),
-                    HumanMessage(content=f"Is there a hack in these logs? Summarize: {snippet}")
-                ])
-                summary = str(resp.content)
-                detected = any(k in summary.lower() for k in ("hack", "breach", "unauthorized", "intrusion"))
+    try:
+        model = ChatGoogleGenerativeAI(api_key=gemini_api_key, model=GEMINI_MODEL, temperature=0)
 
-        except Exception as e:
-            summary = f"Eerrr ai call: {type(e).__name__}; using the fallback sys."
+        # Simplified prompt: Ask for a specific prefix to determine the lock status
+        resp = model.invoke([
+            SystemMessage(content="""You are Aegis Sentry, an elite cybersecurity AI. 
+            Analyze the logs for patterns like brute force or suspicious IPs. 
+            If you find a threat and want to lock the system, start your response with 'VERDICT: LOCK'. 
+            Otherwise, start with 'VERDICT: SAFE'. 
+            Then provide a concise summary."""),
+            HumanMessage(content=f"Analyze these logs:\n\n{snippet}")
+        ])
+        
+        raw_text = str(resp.content)
+        summary = raw_text.replace("VERDICT: LOCK", "").replace("VERDICT: SAFE", "").strip()
+        detected = "VERDICT: LOCK" in raw_text.upper()
 
-    # lil satfty net
-    if "fallback" in summary or summary == "Analysis failed.":
+    except Exception as e:
+        print(f"AI Error: {e}")
+        # Local Heuristic (This is your safety net, but it won't trigger 'Fallback' text anymore)
         lower = snippet.lower()
-        heuristics = ("failed login", "brute force", "unauthorized", "compromised", "hack")
-        detected = any(h in lower for h in heuristics)
-        summary = "(Using fallback) threat detected: . . . " if detected else "(Using Fallback): no threats found"
+        detected = lower.count("failed") > 3 
+        summary = "AI Link Interrupted. Heuristic analysis active."
 
     with _state_lock:
         if detected:
             system_state["is_locked"] = True
-            system_state["threat_level"] = max(1, system_state.get("threat_level", 0) + 1)
+            # Level jumps to 100 on hack, or climbs
+            system_state["threat_level"] = 100
+        else:
+            # Gradually lower threat level if things are safe
+            system_state["threat_level"] = max(0, system_state["threat_level"] - 10)
+            
         system_state["ai_thoughts"] = summary
 
     return {"detected_hack": bool(detected), "summary": summary}
@@ -126,15 +129,18 @@ def get_status():
     with _state_lock:
         return system_state
 
-@app.post("/login-attempt")
-def login_attempt(data: Dict):
-    # 1. Save log
+@app.post("/log-event")  # <--- Changed this from /login-attempt
+async def log_event(data: dict):
+    # 1. Save the JSON data to your log file
     with open(LOG_FILE, "a") as f:
         f.write(json.dumps(data) + "\n")
     
-    # 2. TRIGGER THE AI 
-    # We run the check every time someone tries to login
+    # 2. TRIGGER THE AI ANALYSIS
+    # This calls run_security_check() which talks to Gemini
     analysis = run_security_check()
+    
+    print(f" Log received: {data['username']} - Status: {data['status']}")
+    print(f" Gemini Analysis: {analysis['summary']}")
     
     return {
         "message": "logged",

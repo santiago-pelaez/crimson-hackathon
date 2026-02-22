@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import './Admin.css';
 
-function Admin({ isLocked }) {
+function Admin({ isLocked, threatLevel, aiThoughts }) {
   const [threats, setThreats] = useState([
-    {
-      id: 1,
-      ip: '192.168.1.1',
-      status: 'TRAPPED',
-      time: '18:05:12'
-    },
-    {
-      id: 2,
-      ip: '45.122.10.1',
-      status: 'INTERCEPTED',
-      time: '18:08:45'
-    }
+    { id: 1, ip: '192.168.1.1', status: 'TRAPPED', time: '18:05:12' },
+    { id: 2, ip: '45.122.10.1', status: 'INTERCEPTED', time: '18:08:45' }
   ]);
+
+  const handleReset = async () => {
+    try {
+      await fetch('http://localhost:8000/unlock', { method: 'POST' });
+    } catch (e) {
+      console.error("Failed to unlock");
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -46,6 +44,12 @@ function Admin({ isLocked }) {
       <div className="admin-container">
         <header className="admin-header">
           <h2>BAKERY_VAULT_v4.0</h2>
+          <button 
+            onClick={handleReset} 
+            style={{ background: '#7D5A50', color: 'white', padding: '5px 15px', borderRadius: '8px', cursor: 'pointer', border: 'none', fontWeight: 'bold' }}
+          >
+            RESET SYSTEM
+          </button>
           <div className="system-status">● SYSTEM ACTIVE</div>
         </header>
 
@@ -69,6 +73,13 @@ function Admin({ isLocked }) {
                 </code>
               </div>
             ))}
+          </div>
+
+          <div className="stat-card ai-thoughts-box">
+            <h3>Aegis AI Sentry Analysis</h3>
+            <p style={{ color: '#E890A2', fontWeight: 'bold', fontSize: '0.9rem', marginTop: '10px' }}>
+              {aiThoughts || "Waiting for data..."}
+            </p>
           </div>
         </div>
       </div>
