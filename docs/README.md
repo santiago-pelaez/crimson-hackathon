@@ -1,7 +1,7 @@
 # Aegis Lock
 **A Full-Stack Approach to a Penetration Test**
 
-Aegis Lock is a physical security feature to deter attackers, distinguish them from authorized users, and physically approve authorized users, should it be escalted to that level. It's a twist on a physical passkey entirely programmed into a deadlock that can’t be bypassed remotely.
+Aegis Lock is a physical security feature to deter attackers, distinguish them from authorized users, and physically approve authorized users, should it be escalated to that level. It's a twist on a physical passkey entirely programmed into a deadlock that can’t be bypassed remotely.
 
 This repository contains a full-stack web application built for penetration testing exercises and to demonstrate a working simulated full-stack website. It includes both frontend and backend components running in **Docker containers**. The goal is to simulate brute force cyber threats and use an LLM to recognize "automation" or unusual login attempts such as VPN detection and IP geolocation.
 
