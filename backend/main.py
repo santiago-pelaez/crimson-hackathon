@@ -58,9 +58,9 @@ system_state = {
     "is_locked": False,
     "threat_level": 0,
     "ai_thoughts": ["Sentry active. Monitoring network traffic..."],
-    "queue_status": "Green",                # kept from your version
-    "pending_approvals": [],                 # from teammate
-    "user_data": {}                           # from teammate
+    "queue_status": "Green",
+    "pending_approvals": [],
+    "user_data": {}
 }
 
 def _read_logs(max_lines: int = 100) -> List[Dict]:
@@ -123,8 +123,7 @@ def run_security_check(current_user: str, metadata: dict) -> Dict:
         model = ChatGoogleGenerativeAI(
             google_api_key=gemini_api_key,
             model=GEMINI_MODEL,
-            temperature=0,
-            version="v1"
+            temperature=0
         )
         resp = model.invoke([SystemMessage(content="You are Aegis Heuristic Sentry."), HumanMessage(content=prompt)])
         parsed = _parse_sentry_output(str(resp.content))
@@ -138,7 +137,7 @@ def run_security_check(current_user: str, metadata: dict) -> Dict:
         }
 
     with _state_lock:
-        system_state["queue_status"] = parsed["verdict"].title()   # update queue status
+        system_state["queue_status"] = parsed["verdict"].title()
         system_state["threat_level"] = parsed["score"]
         system_state["ai_thoughts"] = [parsed["reason"]]
         if parsed["verdict"] == "RED":
@@ -216,8 +215,7 @@ async def chat_with_gemini(request: ChatRequest):
         model = ChatGoogleGenerativeAI(
             google_api_key=gemini_api_key,
             model=GEMINI_MODEL,
-            temperature=0.7,
-            version="v1"
+            temperature=0.7
         )
         resp = model.invoke([SystemMessage(content="You are the Aegis Cyber Advisor."), HumanMessage(content=prompt)])
         return {"response": str(resp.content)}
