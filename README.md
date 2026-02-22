@@ -1,18 +1,18 @@
 # Aegis Lock
 **A Full-Stack Approach to a Penetration Test**
 
-Aegis Lock is a physical security feature to deter attackers, distinguish them from authorized users, and physically approve authorized users. It is a twist on a physical passkey entirely programmed into a deadlock that can’t be bypassed remotely.
+Aegis Lock is a physical security feature to deter attackers, distinguish them from authorized users, and physically approve authorized users, should it be escalted to that level. It's a twist on a physical passkey entirely programmed into a deadlock that can’t be bypassed remotely.
 
 This repository contains a full-stack web application built for penetration testing exercises and to demonstrate a working simulated full-stack website. It includes both frontend and backend components running in **Docker containers**. The goal is to simulate brute force cyber threats and use an LLM to recognize "automation" or unusual login attempts such as VPN detection and IP geolocation.
 
 The environment allows security professionals and penetration testers to **simulate** a brute force attack and malicious login attempts, while training an API to monitor and react to suspicious activities.
 
 ### Key Components
-- **Frontend**: Web interface simulating a bakery and an admin portal using React.js.
-- **Backend**: Python built using FastAPI, which utilizes LLM Gemini 2.5 Flash to assess activity.
-- **Database**: A database containing user data for testing. (For the home stretch)
-- **Docker**: Fully containerized environment using Docker for easy setup and testing.
-- **Physical Authorization**: A physical button programmed on a Raspberry Pi to act as a physical passkey to bypass "high threat" assessed login attempts from an authorized user.
+- **Frontend**: The web interface simulates a bakery and an log on portal using React.js.
+- **Backend**: The backend is in python built using FastAPI, which utilizes LLM Gemini 2.5 Flash to assess suspicious activity.
+- **Database**: A test database to contain user data for testing. (For the home stretch)
+- **Docker**: a fully containerized environment using Docker for easy setup and testing.
+- **Physical Authorization**: A physical button programmed on a Raspberry Pi to act as a physical passkey to bypass "threat" assements from login attempts by an actual authorized user.
 
 ---
 
@@ -22,8 +22,8 @@ This application implements a **dynamic threat model** based on user behavior, s
 
 #### **Threat Levels**:
 1. **Green (Low Threat <= 30)**: 
-   - Users located in **West Coast** regions (Seattle, Portland, California) which simulate where our small company is based are assumed to be green.
-   - Each failed login attempt adds 15 points to our threat model, and a 30-second timeout occurs after every 5 failed attempts.
+   - Users located in **West Coast** regions (Seattle, Portland, California) which simulate where our small company is based, are assumed to be green.
+   - 5 failed login attempt adds 15 points to our threat model, and a 30-second timeout occurs after every 5th failed attempt.
    
 2. **Yellow (Medium Threat < 60)**:
    - Users accessing via **domestic VPNs** or showing suspicious behavior patterns.
@@ -31,7 +31,7 @@ This application implements a **dynamic threat model** based on user behavior, s
    
 3. **Red (High Threat >= 60)**:
    - **Non-U.S. IP addresses** or users showing **brute-force attack patterns**.
-   - After **3 failed login attempts**, a 3-minute timeout is applied, and the user is flagged as high-risk.
+   - After the threshold has been reached, every **3 failed login attempts** a 3-minute timeout is applied, and the user is flagged as high-risk.
 
 ### Attack Scenarios for the Penetration Test
 - **Brute Force Attacks** (IP rotation, multiple attempts from the same user)
