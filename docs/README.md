@@ -12,7 +12,7 @@ The environment allows security professionals and penetration testers to **simul
 - **Backend**: The backend is in python built using FastAPI, which utilizes LLM Gemini 2.5 Flash to assess suspicious activity.
 - **Database**: A test database to contain user data for testing. (For the home stretch)
 - **Docker**: a fully containerized environment using Docker for easy setup and testing.
-- **Physical Authorization**: A physical button programmed on a Raspberry Pi to act as a physical passkey to bypass "threat" assements from login attempts by an actual authorized user.
+- **Physical Authorization**: A physical button programmed on a Raspberry Pi to act as a physical passkey to bypass "threat" assessments from login attempts by an actual authorized user.
 
 ---
 
@@ -23,7 +23,7 @@ This application implements a **dynamic threat model** based on user behavior, s
 #### **Threat Levels**:
 1. **Green (Low Threat <= 30)**: 
    - Users located in **West Coast** regions (Seattle, Portland, California) which simulate where our small company is based, are assumed to be green.
-   - 5 failed login attempt adds 15 points to our threat model, and a 30-second timeout occurs after every 5th failed attempt.
+   - 5 failed login attempts adds 15 points to our threat model, and a 30-second timeout occurs after every 5th failed attempt.
    
 2. **Yellow (Medium Threat < 60)**:
    - Users accessing via **domestic VPNs** or showing suspicious behavior patterns.
