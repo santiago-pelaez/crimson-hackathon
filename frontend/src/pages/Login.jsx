@@ -1,68 +1,77 @@
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import './Login.css';
 
 function Login() {
   const navigate = useNavigate();
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  
-  // 1. Get the data from the form
-  const username = e.target[0].value; 
-  const password = e.target[1].value;
+    e.preventDefault();
 
-  // 2. Logic: Let's say only 'admin' with password 'password123' works
-  const isSuccess = username === 'worker123' && password === 'password123';
-  
-  // 3. Prepare the payload for Gemini to analyze
-  const loginData = {
-    username: username,
-    timestamp: new Date().toLocaleString(),
-    status: isSuccess ? 'success' : 'failed',
-    ip: '127.0.0.1', // Standard for local testing
-    userAgent: navigator.userAgent // Cool extra info for Gemini!
+    // This is the more reliable way to get data from the form
+    const formData = new FormData(e.currentTarget);
+    const username = formData.get('username'); // Make sure your input has name="username"
+    const password = formData.get('password'); // Make sure your input has name="password"
+
+    console.log("Attempting login for:", username); // Debug line
+
+    const isSuccess = username === 'worker123' && password === 'password123';
+    
+    const loginData = {
+      username: username || "anonymous", // Fallback so it's never null
+      timestamp: new Date().toISOString(),
+      status: isSuccess ? 'success' : 'failed',
+      location: 'West Coast, US', 
+      isVPN: false,
+      ip: '127.0.0.1',
+      userAgent: navigator.userAgent
+    };
+
+    // ... rest of your fetch code ...
+    try {
+      const response = await fetch('http://localhost:8000/log-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginData),
+      });
+      
+      const result = await response.json();
+
+      if (isSuccess && result.analysis.queue !== "Yellow") {
+        navigate('/admin');
+      } else if (result.analysis.queue === "Yellow") {
+        setErrorMsg("LOGIN HELD: Domestic VPN detected. Pending Admin Approval.");
+      } else {
+        setErrorMsg(`ACCESS DENIED: Attempt logged. Threat Score: ${result.analysis.score}`);
+      }
+    } catch (error) {
+      console.error("Backend offline!");
+    }
   };
 
-  try {
-    // 4. Send this to your Python Backend
-    await fetch('http://localhost:8000/log-event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(loginData),
-    });
-
-    // 5. If successful, go to admin. If failed, maybe alert the user
-    if (isSuccess) {
-      navigate('/admin');
-    } else {
-      alert("AI Sentry: Unusual login detected. This attempt has been logged.");
-    }
-  } catch (error) {
-    console.error("Backend offline!", error);
-  }
-};
-
   return (
-    <div className="auth-container" alt='bakery store'>
+    <div className="auth-container-serious">
       <div className="auth-card">
-        <h2>Worker Portal</h2>
-        <p style={{ color: '#7D5A50', opacity: 0.7, marginBottom: '20px' }}>
-          Authorized Personnel Only. All access is monitored by Aegis Sentry AI.
-        </p>
+        <h2>Aegis Secure Portal</h2>
+        <p className="auth-subtitle">Quantum-Resistant Authentication System</p>
+        
+        {errorMsg && <div className="error-banner">{errorMsg}</div>}
+
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label>Username</label>
-            <input type="text" required />
+            <label>Employee ID</label>
+            <input name="username" type="text" placeholder="Username" required />
           </div>
           <div className="form-group">
-            <label>Password</label>
-            <input type="password" required />
+            <label>Security Key</label>
+            <input name="password" type="password" placeholder="••••••••" required />
           </div>
-          <button type="submit" className="auth-btn">Log In</button>
+          <button type="submit" className="auth-btn-serious">SECURE ACCESS</button>
         </form>
       </div>
     </div>
-  );
-}
+  ); // <--- Added this );
+} // <--- Added this }
 
 export default Login;

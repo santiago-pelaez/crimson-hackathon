@@ -1,82 +1,22 @@
-.admin-body {
-  background-color: #0d0d0d;
-  min-height: 100vh;
-  color: #00ff41; 
-  font-family: 'Courier New', Courier, monospace;
+/* Admin.css - Cleaned up for Tailwind */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0B0E14; /* Deep space black */
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
-.admin-header{
-  text-align: center;
-  font-size: 25px;
+/* This adds the "Hacker" glow to the logs without ruining the layout */
+.font-mono {
+  font-family: 'ui-monospace', 'Cascadia Code', 'Source Code Pro', monospace;
 }
 
-.lock-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(15px); 
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.warning-box {
-  text-align: center;
-  border: 2px solid #ff3e3e;
-  padding: 3rem;
-  color: #ff3e3e;
-  background: rgba(255, 0, 0, 0.05);
-  box-shadow: 0 0 50px rgba(255, 62, 62, 0.2);
-}
-
-.admin-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  padding: 40px;
-}
-
-.stat-card {
-  background: #1a1a1a;
-  padding: 20px;
-  border: 1px solid #333;
-  text-align: center;
-}
-
-.log-panel {
-  grid-column: span 2;
-  background: #000;
-  padding: 20px;
-  border: 1px solid #00ff41;
-  height: 200px;
-  overflow: hidden;
-}
-
-.log-entry { 
-  margin-bottom: 10px; 
-  font-size: 0.9rem; 
-}
-
-.status-trapped {
-  color: #ff3e3e; /* Neon Red */
-  text-shadow: 0 0 10px rgba(255, 62, 62, 0.8), 0 0 20px rgba(255, 62, 62, 0.4);
-  font-weight: bold;
-}
-
-.status-intercepted {
-  color: #ffbd2e; /* Warning Yellow */
-  text-shadow: 0 0 10px rgba(255, 189, 46, 0.8);
-  font-weight: bold;
+/* Keep the cool pulse for the AI thoughts */
+.animate-pulse-slow {
+  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
-}
-
-.log-entry {
-  animation: pulse 2s infinite;
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }

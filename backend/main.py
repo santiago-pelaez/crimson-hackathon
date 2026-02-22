@@ -1,168 +1,176 @@
-### This is the file where the front end and the back end are connected. Ts is hte main file of the backend and controls the enter application DO NOT TOUCH #####
-
-
-
 ########## IMPORTS ##########
 from fastapi import FastAPI
-from pydantic import BaseModel, Field # Added Field here
+from pydantic import BaseModel, Field
 import json
 import threading
+import os
 from datetime import datetime
 from typing import List, Dict, Optional
-import os
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
-# agentic ai type shiitititii
 try:
     from langchain_google_genai import ChatGoogleGenerativeAI
     from langchain_core.messages import SystemMessage, HumanMessage
 except Exception:
-    print("There was an error importing the langchain_google_genai package.")
     ChatGoogleGenerativeAI = None
-########## END OF IMPORTS ##########
 
-
-####### Establishing varibles etc. #######
-
-# Replace the old load_dotenv() with this:
+########## SETUP ##########
 load_dotenv(r"C:\Users\chika\OneDrive\Documents\crimson-hackathon\aegis-backend\.env")
-
 gemini_api_key = os.getenv("GEMINI_API_KEY")
-GEMINI_MODEL ="gemini-2.5-flash" 
+print(f"DEBUG: API Key Loaded: {gemini_api_key[:5]}*****")
+GEMINI_MODEL = "gemini-2.5-flash"
 LOG_FILE = os.path.join(os.path.dirname(__file__), "logs.json")
 
 app = FastAPI()
-
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows your React app to connect
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 _state_lock = threading.Lock()
-####### ENd of establishing base varibles #######
 
-
-
-
-#pydantic data
+# New State Structure based on your requirements
 system_state = {
     "is_locked": False,
-    "threat_score": 0,
-    "queue_status": "Green", # Green, Yellow, Red
-    "ai_thoughts": "System monitoring...",
-    "pending_approvals": [] # For your manual review feature
+    "threat_level": 0,
+    "queue_status": "Green", 
+    "ai_thoughts": ["Sentry active. Monitoring network traffic..."],
+    "pending_approvals": [], # Users in Yellow Queue
+    "user_data": {} # Tracks scores and attempts: { "username": {"score": 0, "attempts": 0} }
 }
 
-def _read_logs(max_lines: int = 200) -> List[Dict]:
-    if not os.path.exists(LOG_FILE):
-        return []
-    entries: List[Dict] = []
+def _read_logs(max_lines: int = 100) -> List[Dict]:
+    if not os.path.exists(LOG_FILE): return []
+    entries = []
     with open(LOG_FILE, "r", encoding="utf-8") as f:
         for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                entries.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
-        return entries[-max_lines:]
+            try: entries.append(json.loads(line))
+            except: continue
+    return entries[-max_lines:]
+
+def run_security_check(current_user: str, metadata: dict) -> Dict:
+    logs = _read_logs(50)
+    log_snippet = json.dumps(logs, indent=2)
     
+    with _state_lock:
+        # Initialize user if new
+        if current_user not in system_state["user_data"]:
+            system_state["user_data"][current_user] = {"score": 0, "attempts": 0}
+        
+        user = system_state["user_data"][current_user]
+        
+        # LOGIC: Points for failed attempts
+        if metadata.get("status") == "failed":
+            user["attempts"] += 1
+            user["score"] += 15 # Each failure = 15 points
+        
+    # AI AGENTIC CLASSIFICATION
+    prompt = f"""
+    Analyze this login attempt for user: {current_user}
+    Metadata: {json.dumps(metadata)}
+    Recent Logs: {log_snippet}
 
-class SecurityAnalysis(BaseModel):
-    detected_hack: bool = Field(description="Whether a security threat was found")
-    summary: str = Field(description="Short summary of the analysis")
+    RULES:
+    1. GREEN: (Score <= 30) Domestic/West Coast.
+    2. YELLOW: (Score < 60) Domestic VPN or Suspicious activity.
+    3. RED: (Score >= 60 or Non-U.S. IP). Brute force detected.
 
-
-def run_security_check(timeout_seconds: int = 15) -> Dict:
-    logs = _read_logs(100)
-    snippet = json.dumps(logs, ensure_ascii=False, indent=2)
-
-    if not gemini_api_key or not ChatGoogleGenerativeAI:
-        return {"detected_hack": False, "summary": "AI Configuration Error"}
+    Provide a verdict in this format:
+    VERDICT: [GREEN/YELLOW/RED]
+    REASON: [Short professional explanation]
+    """
 
     try:
         model = ChatGoogleGenerativeAI(api_key=gemini_api_key, model=GEMINI_MODEL, temperature=0)
-
-        # Simplified prompt: Ask for a specific prefix to determine the lock status
-        resp = model.invoke([
-            SystemMessage(content="""You are Aegis Sentry, an elite cybersecurity AI. 
-            Analyze the logs for patterns like brute force or suspicious IPs. 
-            If you find a threat and want to lock the system, start your response with 'VERDICT: LOCK'. 
-            Otherwise, start with 'VERDICT: SAFE'. 
-            Then provide a concise summary."""),
-            HumanMessage(content=f"Analyze these logs:\n\n{snippet}")
-        ])
+        resp = model.invoke([SystemMessage(content="You are Aegis Sentry Security."), HumanMessage(content=prompt)])
+        ai_res = str(resp.content)
         
-        raw_text = str(resp.content)
-        summary = raw_text.replace("VERDICT: LOCK", "").replace("VERDICT: SAFE", "").strip()
-        detected = "VERDICT: LOCK" in raw_text.upper()
+        # Parse AI Decision
+        new_queue = "Green"
+        if "RED" in ai_res.upper(): new_queue = "Red"
+        elif "YELLOW" in ai_res.upper(): new_queue = "Yellow"
+        
+        reason = ai_res.split("REASON:")[-1].strip() if "REASON:" in ai_res else ai_res
 
     except Exception as e:
         print(f"AI Error: {e}")
-        # Local Heuristic (This is your safety net, but it won't trigger 'Fallback' text anymore)
-        lower = snippet.lower()
-        detected = lower.count("failed") > 3 
-        summary = "AI Link Interrupted. Heuristic analysis active."
+        new_queue = "Red" if user["score"] >= 60 else "Green"
+        reason = "Autonomous mode active. Score-based Triage."
 
     with _state_lock:
-        if detected:
+        system_state["queue_status"] = new_queue
+        system_state["threat_level"] = user["score"]
+        system_state["ai_thoughts"] = [reason]
+        
+        # RED triggers Lockdown
+        if new_queue == "Red":
+            system_state["threat_level"] = 100 
             system_state["is_locked"] = True
-            # Level jumps to 100 on hack, or climbs
-            system_state["threat_level"] = 100
         else:
-            # Gradually lower threat level if things are safe
-            system_state["threat_level"] = max(0, system_state["threat_level"] - 10)
+            system_state["threat_level"] = user["score"]
             
-        system_state["ai_thoughts"] = summary
+        system_state["ai_thoughts"] = [reason]
+        
+        # YELLOW triggers Manual Review
+        if new_queue == "Yellow" and metadata.get("status") == "success":
+            system_state["pending_approvals"].append({"user": current_user, "time": datetime.now().strftime("%H:%M:%S")})
 
-    return {"detected_hack": bool(detected), "summary": summary}
+    return {"queue": new_queue, "score": user["score"]}
 
 @app.get("/status")
 def get_status():
-    """This is what the Frontend polls every 1 second to see if it should blur."""
-    with _state_lock:
-        return system_state
+    with _state_lock: return system_state
 
-@app.post("/log-event")  # <--- Changed this from /login-attempt
+@app.post("/log-event")
 async def log_event(data: dict):
-    # 1. Save the JSON data to your log file
     with open(LOG_FILE, "a") as f:
         f.write(json.dumps(data) + "\n")
     
-    # 2. TRIGGER THE AI ANALYSIS
-    # This calls run_security_check() which talks to Gemini
-    analysis = run_security_check()
-    
-    print(f" Log received: {data['username']} - Status: {data['status']}")
-    print(f" Gemini Analysis: {analysis['summary']}")
-    
-    return {
-        "message": "logged",
-        "analysis_result": analysis
-    }
+    analysis = run_security_check(data.get("username", "unknown"), data)
+    return {"status": "processed", "analysis": analysis}
 
 @app.post("/unlock")
 def unlock_system():
     with _state_lock:
-        system_state["is_locked"] = False
-        system_state["threat_level"] = 0
-        system_state["ai_thoughts"] = "System reset manually. System is unlocked."
-    return {"message": "System unlocked"}
+        system_state.update({
+            "is_locked": False, 
+            "threat_level": 0,
+            "queue_status": "Green",
+            "ai_thoughts": ["System Reset."],
+            "user_data": {},
+            "pending_approvals": []
+            
+            })
+    return {"message": "Unlocked"}
 
-@app.post("/lock")
-def manual_lock():
-    with _state_lock:
-        system_state["is_locked"] = True
-        system_state["threat_level"] = 85
-        system_state["ai_thoughts"] = "Manual lock triggered for demo"
-    return {"status": "locked"}
+########## CHAT & LOGS ENDPOINTS ##########
 
-# --- TO RUN THE SERVER ---
-# Type to terminal:
-# uvicorn main:app --reload
+class ChatRequest(BaseModel):
+    message: str
+    context: list
+
+@app.get("/logs")
+def get_logs():
+    # This reads your existing LOG_FILE and returns it as a list for the table
+    return _read_logs(100)
+
+@app.post("/chat")
+async def chat_with_gemini(request: ChatRequest):
+    if not ChatGoogleGenerativeAI:
+        return {"response": "AI Module not loaded. Check dependencies."}
+    
+    try:
+        # Create a prompt that includes the security logs as context
+        log_context = json.dumps(request.context[-10:], indent=2)
+        prompt = f"""
+        You are the Aegis Sentry AI. 
+        Recent Security Logs: {log_context}
+        User Question: {request.message}
+        
+        Provide a concise, professional security analysis or answer based on the logs provided.
+        """
+        
+        model = ChatGoogleGenerativeAI(api_key=gemini_api_key, model=GEMINI_MODEL, temperature=0.7)
+        resp = model.invoke([SystemMessage(content="You are Aegis Sentry Intelligence Hub."), HumanMessage(content=prompt)])
+        
+        return {"response": str(resp.content)}
+    except Exception as e:
+        return {"response": f"Gemini Error: {str(e)}"}
