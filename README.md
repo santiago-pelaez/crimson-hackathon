@@ -46,11 +46,11 @@ When suspicious activity is detected such as multiple failed login attempts, VPN
 
 The **manual approval** process is facilitated through a backend terminal, which provides a real-time review of suspicious behavior. The terminal enables security personnel to observe **metadata** about each user’s activity to take appropriate action (e.g., approve access or lockout).
 
-### **2. Priority System and Queues**
+## **2. Priority System and Queues**
 
 The approval system operates on a two-tiered queue system for manual review, with a priority hierarchy to focus aid on human-errors typically evaluated at a threat level medium.
 
-### **3. Backend Terminal Functionality**
+## **3. Backend Terminal Functionality**
 
 The **backend terminal** is used for monitoring suspicious activities. System administrators can review login attempts to physically approve logins.
 
