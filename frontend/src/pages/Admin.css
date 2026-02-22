@@ -2,16 +2,16 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #0B0E14; /* Deep space black */
+  background-color: #0B0E14; 
   font-family: 'Inter', -apple-system, sans-serif;
 }
 
-/* This adds the "Hacker" glow to the logs without ruining the layout */
+
 .font-mono {
   font-family: 'ui-monospace', 'Cascadia Code', 'Source Code Pro', monospace;
 }
 
-/* Keep the cool pulse for the AI thoughts */
+
 .animate-pulse-slow {
   animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

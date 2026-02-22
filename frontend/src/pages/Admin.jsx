@@ -1,25 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Activity, MapPin, Lock, AlertTriangle, Terminal } from 'lucide-react';
 
-// Fixed paths: moving UP one level to find the components folder
 import { Card, CardHeader, CardTitle, CardContent } from '../components/card'; 
 import { Button } from '../components/button';
 import { Badge } from '../components/badge';
 
-const AdminDashboard = ({ isLocked, threatLevel, aiThoughts }) => {
+const AdminDashboard = (props) => {
+  const isLocked = props.is_locked ?? props.isLocked ?? false;
+  const threatLevel = props.threat_level ?? props.threatLevel ?? 0;
+  const aiThoughts = props.ai_thoughts ?? props.aiThoughts ?? ["Aegis Intelligence Hub online. How can I assist with your security posture?"];
   const [logs, setLogs] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState([
-    { role: 'ai', text: "Aegis Intelligence Hub online. How can I assist with your security posture?" }
+    { role: 'ai', text: aiThoughts[0] }
   ]);
+  const [sending, setSending] = useState(false);
 
-  // 1. Fetch real logs from the backend
+  // get logs from the backnend every time the threat level changes (indicating a new event)
   useEffect(() => {
     const fetchLogs = async () => {
       try {
         const res = await fetch('http://localhost:8000/logs');
         const data = await res.json();
-        setLogs([...data].reverse()); // Show newest first
+        setLogs([...data].reverse()); // Show newest  1st
       } catch (err) {
         console.error("Failed to fetch logs");
       }
@@ -29,9 +32,9 @@ const AdminDashboard = ({ isLocked, threatLevel, aiThoughts }) => {
 
   // 2. Handle Gemini Chat
   const handleSendMessage = async () => {
-    if (!chatInput.trim() || isLocked) return;
-    
-    const userMsg = chatInput;
+    if (!chatInput.trim() || isLocked || sending) return;
+    setSending(true);
+    const userMsg = chatInput.trim();
     setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
     setChatInput("");
 
@@ -44,7 +47,10 @@ const AdminDashboard = ({ isLocked, threatLevel, aiThoughts }) => {
       const data = await res.json();
       setChatHistory(prev => [...prev, { role: 'ai', text: data.response }]);
     } catch (err) {
-      setChatHistory(prev => [...prev, { role: 'ai', text: "Connection error to Gemini." }]);
+      setChatHistory(prev => [...prev, { role: 'ai', text: "Connection error to AI advisor." }]);
+      console.error('Chat error', err);
+    } finally {
+      setSending(false);
     }
   };
 

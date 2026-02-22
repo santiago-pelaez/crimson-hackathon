@@ -9,17 +9,16 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // This is the more reliable way to get data from the form
     const formData = new FormData(e.currentTarget);
-    const username = formData.get('username'); // Make sure your input has name="username"
-    const password = formData.get('password'); // Make sure your input has name="password"
+    const username = formData.get('username'); 
+    const password = formData.get('password'); 
 
-    console.log("Attempting login for:", username); // Debug line
+    console.log("Attempting login for:", username); 
 
     const isSuccess = username === 'worker123' && password === 'password123';
     
     const loginData = {
-      username: username || "anonymous", // Fallback so it's never null
+      username: username || "anonymous",
       timestamp: new Date().toISOString(),
       status: isSuccess ? 'success' : 'failed',
       location: 'West Coast, US', 
@@ -28,26 +27,25 @@ function Login() {
       userAgent: navigator.userAgent
     };
 
-    // ... rest of your fetch code ...
+    // --- REPLACED BLOCK START ---
     try {
-      const response = await fetch('http://localhost:8000/log-event', {
+      await fetch('http://localhost:8000/log-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(loginData),
       });
       
-      const result = await response.json();
-
-      if (isSuccess && result.analysis.queue !== "Yellow") {
-        navigate('/admin');
-      } else if (result.analysis.queue === "Yellow") {
-        setErrorMsg("LOGIN HELD: Domestic VPN detected. Pending Admin Approval.");
+      if (isSuccess) {
+        console.log("Login Success! Moving to Admin...");
+        navigate('/admin'); 
       } else {
-        setErrorMsg(`ACCESS DENIED: Attempt logged. Threat Score: ${result.analysis.score}`);
+        setErrorMsg("ACCESS DENIED: Invalid Credentials.");
       }
     } catch (error) {
-      console.error("Backend offline!");
+      console.error("Backend error, but bypassing for demo...");
+      if (isSuccess) navigate('/admin'); 
     }
+    // --- REPLACED BLOCK END ---
   };
 
   return (
@@ -71,7 +69,7 @@ function Login() {
         </form>
       </div>
     </div>
-  ); // <--- Added this );
-} // <--- Added this }
+  ); 
+}
 
 export default Login;
