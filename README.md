@@ -16,6 +16,24 @@ The environment allows security professionals and penetration testers to **simul
 - **Physical authorization**: A physical button programmed on a Rasberry Pi to act as a physical passkey to bypass "high threat" assessed login attempts from an authorized user. 
 ---
 
+### Threat Model and Test Scenarios
+
+This application implements a **dynamic threat model** based on user behavior, such as login attempts, IP geolocation, VPN usage, and other factors. The goal is to **detect and react to potential security threats** like brute-forcing, account sharing, and unauthorized access from suspicious geolocations.
+
+#### **Threat Levels**:
+1. **Green (Low Threat <= 30)**: 
+   - Users located in **West Coast** regions (Seattle, Portland, California) which simulates where our small company is based in are assumed to be green.
+   - Each failed login attempt adds 15 points to our threat model and a 30 second timeout after every 5 failed attempts.
+   
+2. **Yellow (Medium Threat < 60)**:
+   - Users accessing via **domestic VPNs** or from suspicious behavior patterns.
+   - **20 failed login attempts** or reaching 60 points automatically escalates to a **Red** threat.
+   
+3. **Red (High Threat >= 60)**:
+   - **Non-U.S. IP addresses** or users showing **brute-force attack patterns**.
+   - After **3 failed login attempts**, a 3-minute timeout is applied, and the user is flagged as high-risk.
+
+
 ## What you can demo in 2 minutes
 ### 1) Customer View (`/`)
 A simple storefront page (e.g., “Mom’s Bakery”). This **never locks**.
