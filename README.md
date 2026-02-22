@@ -1,19 +1,19 @@
 # Aegis Lock
 **A Full-Stack Approach to a Penetration Test**
 
-Aegis Lock is a physical security feature to deter attackers, distinguish them from authroized users, and physially approve authorized users. A sort of twist to a physical passkey entirely programed in to a deadlock that can’t be bypassed remotely.
+Aegis Lock is a physical security feature to deter attackers, distinguish them from authorized users, and physically approve authorized users. It is a twist on a physical passkey entirely programmed into a deadlock that can’t be bypassed remotely.
 
-This repository contains a full-stack web application built for penetration testing exercises and to demonstrate a working simulated full-stack website.
-It includes both frontend and backend components running in **Docker containers**. The goal is to simulate brute force cyber threats and use an LLM to recognize "automation" or unusual login attempts such as VPN detection and IP geolocation.
+This repository contains a full-stack web application built for penetration testing exercises and to demonstrate a working simulated full-stack website. It includes both frontend and backend components running in **Docker containers**. The goal is to simulate brute force cyber threats and use an LLM to recognize "automation" or unusual login attempts such as VPN detection and IP geolocation.
 
 The environment allows security professionals and penetration testers to **simulate** a brute force attack and malicious login attempts, while training an API to monitor and react to suspicious activities.
 
 ### Key Components
-- **Frontend**: Web interface simulating a bakery and an admin portal using react.js.
-- **Backend**: Python built using Fast API which utilizes LLM Gemini 2.5 Flash to assess activity.
-- **Database**: some db, containing user data for testing.     // For home stretch
-- **Docker**: Fully containerized enviornment using Docker for easy setup and testing.
-- **Physical authorization**: A physical button programmed on a Rasberry Pi to act as a physical passkey to bypass "high threat" assessed login attempts from an authorized user. 
+- **Frontend**: Web interface simulating a bakery and an admin portal using React.js.
+- **Backend**: Python built using FastAPI, which utilizes LLM Gemini 2.5 Flash to assess activity.
+- **Database**: A database containing user data for testing. (For the home stretch)
+- **Docker**: Fully containerized environment using Docker for easy setup and testing.
+- **Physical Authorization**: A physical button programmed on a Raspberry Pi to act as a physical passkey to bypass "high threat" assessed login attempts from an authorized user.
+
 ---
 
 ### Threat Model and Test Scenarios
@@ -22,11 +22,11 @@ This application implements a **dynamic threat model** based on user behavior, s
 
 #### **Threat Levels**:
 1. **Green (Low Threat <= 30)**: 
-   - Users located in **West Coast** regions (Seattle, Portland, California) which simulates where our small company is based in are assumed to be green.
-   - Each failed login attempt adds 15 points to our threat model and a 30 second timeout after every 5 failed attempts.
+   - Users located in **West Coast** regions (Seattle, Portland, California) which simulate where our small company is based are assumed to be green.
+   - Each failed login attempt adds 15 points to our threat model, and a 30-second timeout occurs after every 5 failed attempts.
    
 2. **Yellow (Medium Threat < 60)**:
-   - Users accessing via **domestic VPNs** or from suspicious behavior patterns.
+   - Users accessing via **domestic VPNs** or showing suspicious behavior patterns.
    - **20 failed login attempts** or reaching 60 points automatically escalates to a **Red** threat.
    
 3. **Red (High Threat >= 60)**:
@@ -38,24 +38,24 @@ This application implements a **dynamic threat model** based on user behavior, s
 - **VPN and Geolocation Spoofing** (Test for IP geolocation filters and VPN detection)
 - **Credential Stuffing** (Test for protection against automated login attempts)
 
-#### Manual Approval and Backend Terminal function
+#### Manual Approval and Backend Terminal Function
 
 ## **1. Manual Approval Process Overview**
 
-When suspicious activity is detected such as multiple failed login attempts, VPN usage, or accessing from a suspicious IP, users are evaluated and properly escalated to the **manual review queue**. This ensures legitimate users aren't incorrectly flagged as attackers and that potential threats are carefully examined before any action is taken. For most attacks, it is escallated to a threshold of 60. Human error can reasonably be categorized in the medium threshold.
+When suspicious activity is detected, such as multiple failed login attempts, VPN usage, or accessing from a suspicious IP, users are evaluated and properly escalated to the **manual review queue**. This ensures legitimate users aren't incorrectly flagged as attackers and that potential threats are carefully examined before any action is taken. For most attacks, it is escalated to a threshold of 60. Human error can reasonably be categorized in the medium threshold.
 
 The **manual approval** process is facilitated through a backend terminal, which provides a real-time review of suspicious behavior. The terminal enables security personnel to observe **metadata** about each user’s activity to take appropriate action (e.g., approve access or lockout).
 
 ## **2. Priority System and Queues**
 
-The approval system operates on a two-tiered queue system for manual review, with a priority hierarchy to focus aid on human-errors typically evaluated at a threat level medium.
+The approval system operates on a two-tiered queue system for manual review, with a priority hierarchy to focus aid on human errors typically evaluated at a threat level medium.
 
 ## **3. Backend Terminal Functionality**
 
 The **backend terminal** is used for monitoring suspicious activities. System administrators can review login attempts to physically approve logins.
 
 #### **3.1. Real-Time Review Dashboard**
-- **Pending Reviews**: The backend terminal displays users who have been escalated to  Yellow or Red queues. Each entry provides metadata and the context needed for making decisions.
+- **Pending Reviews**: The backend terminal displays users who have been escalated to the Yellow or Red queues. Each entry provides metadata and the context needed for making decisions.
   
 - **Metadata Collected**: For each user under review, the following information is displayed:
   - **IP Address**: The geolocation of the user’s IP, indicating if the user is in a trusted region (e.g., West Coast U.S.) or flagged as suspicious (e.g., outside the U.S.).
@@ -66,7 +66,7 @@ The **backend terminal** is used for monitoring suspicious activities. System ad
 #### **3.2. Decisions from Backend Review**
 Once the metadata has been reviewed, the sys-admin can take action in a few ways:
   - **Approve Access**: If no malicious intent is detected, the user can be allowed to proceed with their access.
-  - **Lock Account**: If there is suspicion but no clear malicious intent, the user's account can be temporarily locked for further review or investigation or, in contacted by the user and verified, to be physically bypassed by pressing Rasberry Pi passkey.
+  - **Lock Account**: If there is suspicion but no clear malicious intent, the user's account can be temporarily locked for further review or investigation, or, if contacted by the user and verified, to be physically bypassed by pressing the Raspberry Pi passkey.
 
 ## Setting Up the Lab
 
@@ -74,10 +74,9 @@ Once the metadata has been reviewed, the sys-admin can take action in a few ways
 
 Ensure that the following software is installed on your local machine:
 - [Docker](https://www.docker.com/products/docker-desktop)
-- [Docker Compose](https://docs.docker.com/compose/install/)
 - A terminal or command-line interface (CLI) tool
----
 
+---
 ### Clone the Repository
 
 ```bash
