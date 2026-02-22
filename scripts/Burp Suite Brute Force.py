@@ -5,7 +5,7 @@ TARGET_URL = "http://172.20.10.12:8000/log-event"    # Backend API endpoint
 SUCCESS_INDICATOR = "Success"
 
 # usernames = ["admin' or '1'='1'--"] # Juice swap SQL injection
-usernames = ["admin, Admin"]
+usernames = ["worker123, Admin"]
 passwords = ["password123", "123456", "admin", "pwnd", "letmein"]
 
 proxies = {
