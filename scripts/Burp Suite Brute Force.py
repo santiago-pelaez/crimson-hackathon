@@ -42,7 +42,7 @@ for i in range(10):   # Complete when sending 100 attacks
                     print(f"Credentials:\nUsername: {username}\nPassword: {password}")
                     print("Status:", response.status_code)
                     break
-                elif response.statuscode == 404:
+                else:
                     print("Status:", response.status_code)
                     print("Failed! Not found!\n")
             else:
