@@ -1,14 +1,19 @@
-# Aegis Labyrinth (LCD Edition)
-**Reinvent the firewall into a physical, agentic guardian.**
+# Aegis Lock
+**A Full-Stack Approach to a Penetration Test**
 
-Aegis Labyrinth is a hackathon MVP that combines:
-- **Selective Freeze**: only sensitive admin actions “lock”
-- **Physical authorization**: a **physical button** on a Raspberry Pi to grant access to authroized users
-- **Hardware visibility**: a **Grove LCD RGB Backlight** shows threat level + state in real time
+Aegis Lock is a physical security feature to deter attackers, distinguish them from authroized users, and physially approve authorized users. A sort of twist to a physical passkey entirely programed in to a deadlock that can’t be bypassed remotely.
 
-Theme: **REINVENT THE WHEEL**  
-We reinvent a static firewall “wall” into a **maze** with a **physical deadlock** that can’t be bypassed remotely.
+This repository contains a full-stack web application built for penetration testing exercises and to demonstrate a working simulated full-stack website.
+It includes both frontend and backend components running in **Docker containers**. The goal is to simulate brute force cyber threats and use an LLM to recognize "automation" or unusual login attempts such as VPN detection and IP geolocation.
 
+The environment allows security professionals and penetration testers to **simulate** a brute force attack and malicious login attempts, while training an API to monitor and react to suspicious activities.
+
+### Key Components
+- **Frontend**: Web interface simulating a bakery and an admin portal using react.js.
+- **Backend**: Python built using Fast API which utilizes LLM Gemini 2.5 Flash to assess activity.
+- **Database**: some db, containing user data for testing.     // For home stretch
+- **Docker**: Fully containerized enviornment using Docker for easy setup and testing.
+- **Physical authorization**: A physical button programmed on a Rasberry Pi to act as a physical passkey to bypass "high threat" assessed login attempts from an authorized user. 
 ---
 
 ## What you can demo in 2 minutes
