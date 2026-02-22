@@ -23,14 +23,14 @@ function MomBakery() {
   return (
     <div className="bakery-container">
       
-      <nav className="navbar">
-        <div className="logo">Mom's Bakery</div>
-        <ul className="nav-links">
-            <Link to="/log_in" className="log_in">Log In</Link>
-            <Link to="/sign_up" className="sign_up">Sign Up</Link>           
-            <li className="cart-button"> View Cart 🛒</li>
-        </ul>
-      </nav>
+      <ul className="nav-links">
+        {/* I changed "Log In" to "Worker Portal" and kept the link to /log_in */}
+        <Link to="/log_in" className="log_in">Worker's Portal</Link>
+        
+        {/* I removed the "Sign Up" button completely */}
+        
+        <li className="cart-button"> View Cart 🛒</li>
+      </ul>
 
       <main className="hero">
         

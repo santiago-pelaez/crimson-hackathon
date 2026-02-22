@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+
+
+/* The Prime Aesthetic */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0B0E14 !important; /* The Deep Dark Grey/Black */
+  color: #f8fafc;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
