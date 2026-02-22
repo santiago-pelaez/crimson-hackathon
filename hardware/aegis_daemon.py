@@ -1,126 +1,90 @@
+#!/usr/bin/env python3
 import RPi.GPIO as GPIO
-import requests
 import time
-import threading
+import requests
 
-# Pins
-BUZZER_PIN = 18    # Buzzer on D18
-BUTTON_PIN = 17    # Button on GPIO 17
+BUTTON_PIN = 17
+BUZZER_PIN = 18
+API_URL = "http://localhost:8000"
 
-# Backend endpoints
-BACKEND_URL = "http://localhost:8000/status"
-UNLOCK_URL = "http://localhost:8000/unlock"
+class AegisDaemon:
+    def __init__(self):
+        self.setup_gpio()
+        self.last_locked_state = None
+        self.button_pressed = False
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(BUZZER_PIN, GPIO.OUT)
-GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
-last_locked = None
-last_button = GPIO.HIGH
-buzzer_running = False
-buzzer_thread = None
-
-def beep(times=1, duration=0.1):
-    """Beep the buzzer a given number of times."""
-    for _ in range(times):
-        GPIO.output(BUZZER_PIN, GPIO.HIGH)
-        time.sleep(duration)
+    def setup_gpio(self):
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(BUZZER_PIN, GPIO.OUT)
         GPIO.output(BUZZER_PIN, GPIO.LOW)
-        time.sleep(duration)
 
-def lock_pattern():
-    """Pattern: 3 beeps, 1 second pause, repeat"""
-    global buzzer_running
-    print("🎵 Lock pattern STARTED (3 beeps, pause, repeat)")
-    while buzzer_running:
-        # Three quick beeps
-        for i in range(3):
-            if not buzzer_running:
-                break
+    def play_lock_pattern(self):
+        for _ in range(3):
             GPIO.output(BUZZER_PIN, GPIO.HIGH)
-            time.sleep(0.2)
+            time.sleep(0.1)
             GPIO.output(BUZZER_PIN, GPIO.LOW)
-            time.sleep(0.2)
-        
-        # One second pause before repeating
-        if buzzer_running:
-            time.sleep(1)
-    print("🎵 Lock pattern STOPPED")
+            time.sleep(0.1)
+        time.sleep(0.3)
+        for _ in range(3):
+            GPIO.output(BUZZER_PIN, GPIO.HIGH)
+            time.sleep(0.1)
+            GPIO.output(BUZZER_PIN, GPIO.LOW)
+            time.sleep(0.1)
 
-def start_lock_pattern():
-    global buzzer_running, buzzer_thread
-    if buzzer_running:
-        return
-    buzzer_running = True
-    buzzer_thread = threading.Thread(target=lock_pattern)
-    buzzer_thread.daemon = True
-    buzzer_thread.start()
-
-def stop_lock_pattern():
-    global buzzer_running
-    buzzer_running = False
-    GPIO.output(BUZZER_PIN, GPIO.LOW)
-    time.sleep(0.1)
-
-print("=" * 50)
-print("AEGIS HARDWARE DAEMON - LOCK PATTERN MODE")
-print("=" * 50)
-print(f"Buzzer: GPIO {BUZZER_PIN}")
-print(f"Button: GPIO {BUTTON_PIN}")
-print(f"Backend: {BACKEND_URL}")
-print("Press Ctrl+C to stop")
-print("=" * 50)
-
-try:
-    while True:
-        # Fetch status from backend
-        try:
-            r = requests.get(BACKEND_URL, timeout=2)
-            data = r.json()
-            locked = data.get('is_locked', False)
-            
-            # Handle lock state changes
-            if last_locked is not None and locked != last_locked:
-                if locked:
-                    print("🔒 SYSTEM LOCKED - Starting lock pattern")
-                    start_lock_pattern()
-                else:
-                    print("🔓 SYSTEM UNLOCKED - Stopping lock pattern")
-                    stop_lock_pattern()
-                    beep(1, 0.5)  # one long beep to confirm unlock
-            elif locked and last_locked is None:
-                # Initial state
-                if locked:
-                    print("🔒 SYSTEM LOCKED - Starting lock pattern")
-                    start_lock_pattern()
-            
-            last_locked = locked
-            
-        except requests.exceptions.ConnectionError:
-            print("⚠️  Backend not reachable - waiting...")
-        except Exception as e:
-            print(f"⚠️  Status error: {e}")
-
-        # Check button press
-        button = GPIO.input(BUTTON_PIN)
-        if button == GPIO.LOW and last_button == GPIO.HIGH:
-            print("👉 Button pressed – sending unlock request")
-            try:
-                r = requests.post(UNLOCK_URL, timeout=2)
-                if r.status_code == 200:
-                    print("✅ Unlock successful")
-                    beep(1, 0.1)  # quick confirmation beep
-                else:
-                    print(f"❌ Unlock failed: {r.status_code}")
-            except Exception as e:
-                print(f"❌ Unlock error: {e}")
-            time.sleep(0.2)
-            
-        last_button = button
+    def play_unlock_pattern(self):
+        GPIO.output(BUZZER_PIN, GPIO.HIGH)
         time.sleep(1)
+        GPIO.output(BUZZER_PIN, GPIO.LOW)
 
-except KeyboardInterrupt:
-    print("\n👋 Shutting down...")
-    stop_lock_pattern()
-    GPIO.cleanup()
-    print("Done.")
+    def check_api_status(self):
+        try:
+            r = requests.get(f"{API_URL}/status", timeout=2)
+            if r.status_code == 200:
+                data = r.json()
+                return data.get('is_locked', False)
+        except Exception as e:
+            print(f"Status check error: {e}")
+        return None
+
+    def unlock_via_api(self):
+        try:
+            r = requests.post(f"{API_URL}/unlock", timeout=2)
+            if r.status_code == 200:
+                print("Unlock API call successful")
+                self.play_unlock_pattern()
+            else:
+                print(f"Unlock failed: {r.text}")
+        except Exception as e:
+            print(f"API error: {e}")
+
+    def run(self):
+        print("Aegis Hardware Daemon started (API-polling mode)")
+        print(f"Monitoring button on GPIO {BUTTON_PIN}")
+        print(f"Buzzer on GPIO {BUZZER_PIN}")
+        try:
+            while True:
+                current_locked = self.check_api_status()
+                if current_locked is not None:
+                    if self.last_locked_state is not None and current_locked and not self.last_locked_state:
+                        print("System just locked – playing alert")
+                        self.play_lock_pattern()
+                    self.last_locked_state = current_locked
+
+                if GPIO.input(BUTTON_PIN) == GPIO.LOW and not self.button_pressed:
+                    self.button_pressed = True
+                    print("Button pressed – attempting unlock")
+                    self.unlock_via_api()
+                    time.sleep(0.3)
+                elif GPIO.input(BUTTON_PIN) == GPIO.HIGH:
+                    self.button_pressed = False
+
+                time.sleep(0.5)
+        except KeyboardInterrupt:
+            print("\nShutting down daemon")
+        finally:
+            GPIO.cleanup()
+
+if __name__ == "__main__":
+    daemon = AegisDaemon()
+    daemon.run()

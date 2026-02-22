@@ -56,3 +56,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+venv311/
+venv311/
