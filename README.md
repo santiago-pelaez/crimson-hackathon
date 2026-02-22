@@ -3,10 +3,8 @@
 
 Aegis Labyrinth is a hackathon MVP that combines:
 - **Selective Freeze**: only sensitive admin actions “lock”
-- **Deception (Labyrinth honeypot)**: suspicious users get routed into a decoy admin panel
-- **Physical authorization**: a **real button** on a Raspberry Pi unlocks the admin vault
+- **Physical authorization**: a **physical button** on a Raspberry Pi to grant access to authroized users
 - **Hardware visibility**: a **Grove LCD RGB Backlight** shows threat level + state in real time
-- **Optional agentic AI**: CrewAI/LLM generates explanations & incident reports
 
 Theme: **REINVENT THE WHEEL**  
 We reinvent a static firewall “wall” into a **maze** with a **physical deadlock** that can’t be bypassed remotely.
@@ -95,3 +93,19 @@ Read the build plan: **[ROADMAP.md](ROADMAP.md)**
 - Demo on a local network you control.
 - Do not collect real credentials.
 - Honeypot is for demonstration/education only.
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## React Compiler
+
+The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

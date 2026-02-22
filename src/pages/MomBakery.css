@@ -1,0 +1,383 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@400;600&display=swap');
+
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box;
+}
+
+:root {
+  --cream: #FFFDF5;
+  --pink: #E890A2;
+  --brown: #7D5A50;
+  --white: #ffffff;
+}
+
+body {
+  background-color: var(--cream);
+  font-family: 'Inter', sans-serif;
+  color: var(--brown);
+  line-height: 1.6;
+}
+
+.bakery-container {
+  overflow-x: hidden; 
+  position: relative;
+  min-height: 100vh;
+  
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.5px;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+  padding: 1rem 8%;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  position: relative;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2.5rem;
+  list-style: none;
+  align-items: center; 
+}
+
+.nav-links li {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--brown);
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.nav-links li:hover{
+  color: #fb6785;
+}
+
+.log_in, .sign_up {
+  text-decoration: none;
+  color: inherit;
+  transition: 0.3s;
+  border: solid;
+  width: 150px;
+  text-align: center;
+  border-radius: 10px;
+}
+
+.sign_up {
+  background-color: var(--brown);
+  color: white;
+}
+
+
+.log_in {
+  position: relative;
+  display: inline-block;
+  padding: 10px 25px;
+  color: var(--brown);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  overflow: hidden; 
+  border-radius: 8px;
+  border: 1px solid rgba(125, 90, 80, 0.2);
+  transition: all 0.3s ease;
+  z-index: 1; 
+}
+
+
+.log_in::before {
+  content: '';
+  position: absolute;
+  top: 120%; 
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background-color: var(--pink); 
+  border-radius: 40% 60% 45% 55%; 
+  z-index: -1;
+  transition: top 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slime-spin 4s linear infinite;
+  box-shadow: 0 0 20px #39FF14;
+}
+
+
+.log_in:hover::before {
+  top: -200%; 
+}
+
+.log_in:hover {
+  color: #000000;
+  border-color: var(--cream);
+}
+
+
+@keyframes slime-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.sign_up:hover {
+  background-color: var(--pink);
+  border-color: var(--pink);
+}
+
+.cart-button {
+  background: var(--pink);
+  color: white;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-size: 0.85rem; 
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero-content{
+  position: relative; 
+  z-index: 10;
+  min-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 10%;
+}
+
+.hero-content span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 5px;
+  color: var(--pink);
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+.hero-content h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3.5rem, 10vw, 6.5rem); 
+  line-height: 1;
+  margin-bottom: 2rem;
+}
+
+.hero-content h1 i {
+  font-weight: 400;
+  color: var(--pink);
+  font-style: italic;
+}
+
+.hero-content p {
+  font-size: 1.25rem;
+  max-width: 550px;
+  opacity: 0.8;
+  margin-bottom: 3.5rem;
+  font-weight: 300;
+}
+
+
+.hero-btn {
+  position: relative;
+  background: var(--brown);
+  color: white;
+  padding: 22px 55px;
+  border-radius: 100px;
+  border: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  z-index: 10; 
+  box-shadow: 0 10px 30px rgba(125, 90, 80, 0.15);
+  transition: all 0.4s ease;
+}
+
+.hero-btn:hover {
+  transform: translateY(-4px); 
+  box-shadow: 0 20px 40px rgba(232, 144, 162, 0.4); 
+}
+
+
+.hero-btn::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%; 
+  width: 30px;
+  height: 30px;
+  background-color: var(--pink); 
+ 
+  border-radius: 50% 0 50% 50%; 
+  transform: translateX(-50%) rotate(-45deg) scale(0);
+  
+  z-index: -1; 
+  pointer-events: none; 
+}
+
+
+.hero-btn:hover::after {
+
+  animation: cream-spread 1.5s infinite ease-in;
+}
+
+
+@keyframes cream-spread {
+  0% {
+    top: 100%;
+    opacity: 0;
+    transform: translateX(-50%) rotate(-45deg) scale(0);
+    border-radius: 50% 0 50% 50%; /* Teardrop shape */
+  }
+  15% {
+    top: 150%;
+    opacity: 1;
+    transform: translateX(-50%) rotate(-45deg) scale(1.2);
+    border-radius: 50% 0 50% 50%; /* Swells up and hangs on the button */
+  }
+  45% {
+    top: 60vh; /* Gravity pulls it down the screen */
+    opacity: 1;
+    transform: translateX(-50%) rotate(-45deg) scale(1.2);
+    border-radius: 50% 0 50% 50%; /* Keeps teardrop shape while falling */
+  }
+  50% {
+    /* THE SPLAT: Hits the invisible floor and flattens out */
+    top: 65vh;
+    opacity: 1;
+    transform: translateX(-50%) rotate(0deg) scaleX(4) scaleY(0.5);
+    border-radius: 50%; /* Morphs from teardrop into a round oval/puddle */
+  }
+  85% {
+    /* THE SPREAD: Explodes outward horizontally and vertically */
+    top: 65vh;
+    opacity: 0.8; /* Turns slightly transparent as it stretches */
+    /* scale(150) makes the 30px drop 4500px wide, swallowing the screen! */
+    transform: translateX(-50%) rotate(0deg) scale(150); 
+    border-radius: 50%; 
+  }
+  100% {
+    /* Fades completely away at the end so it can loop smoothly */
+    top: 65vh;
+    opacity: 0;
+    transform: translateX(-50%) rotate(0deg) scale(160);
+    border-radius: 50%;
+  }
+}
+
+.floating-deco {
+  position: absolute;
+  font-size: 3.5rem; 
+  z-index: -1;
+  opacity: 0.3;
+  filter: blur(0.5px);
+  user-select: none; 
+  pointer-events: none; 
+}
+
+.deco-1 { 
+  top: 20%; 
+  left: 8%; 
+  animation: float 10s infinite ease-in-out; 
+}
+.deco-2 { 
+  bottom: 20%; 
+  right: 15%;
+  animation: float 12s infinite ease-in-out reverse; 
+  animation-delay: -2s; 
+}
+
+.deco-3 { 
+  top: 50%; 
+  left: 16%; 
+  animation: float 9s infinite ease-in-out; 
+  animation-delay: -5s; 
+}
+.deco-4 {
+  bottom: 40%; 
+  right: 16%; 
+  animation: float 13s infinite ease-in-out reverse;
+  animation-delay: -1s;
+}
+
+.deco-5 { 
+  top: 80%; 
+  left: 32%; 
+  animation: float 11s infinite ease-in-out; 
+  animation-delay: -7s; 
+}
+.deco-6 {
+  bottom: 75%; 
+  right: 32%; 
+  animation: float 10s infinite ease-in-out reverse;
+  animation-delay: -4s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-40px) rotate(15deg); }
+}
+
+.footer {
+  background-color: #ffffff;
+  padding: 4rem 8%;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  opacity: 0.5;
+  border-top: 1px solid rgba(125, 90, 80, 0.05);
+ 
+}
+
+.secret-door:hover {
+  opacity: 1;
+  color: var(--pink);
+}
+
+
+.hero {
+  position: relative; 
+  overflow: hidden;   
+  min-height: 85vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-backgrounds {
+  position: absolute;
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%;
+  z-index: 0; 
+}
+
+.hero-bg-image {
+  position: absolute;
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%;
+  background-size: cover;      
+  background-position: center; 
+  opacity: 0;                  
+  transition: opacity 1.5s ease-in-out; 
+}
+
+.hero-bg-image.active {
+  opacity: 0.15; 
+}
