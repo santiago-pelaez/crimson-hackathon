@@ -1,7 +1,7 @@
 import requests
 import time
 
-TARGET_URL = "http://172.20.10.12:8000/api/login"    # Backend API endpoint
+TARGET_URL = "http://172.20.10.12:8000/log-event"    # Backend API endpoint
 SUCCESS_INDICATOR = "Success"
 
 # usernames = ["admin' or '1'='1'--"] # Juice swap SQL injection
