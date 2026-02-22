@@ -33,7 +33,33 @@ This application implements a **dynamic threat model** based on user behavior, s
    - **Non-U.S. IP addresses** or users showing **brute-force attack patterns**.
    - After **3 failed login attempts**, a 3-minute timeout is applied, and the user is flagged as high-risk.
 
+### Attack Scenarios for the Penetration Test
+- **Brute Force Attacks** (IP rotation, multiple attempts from the same user)
+- **VPN and Geolocation Spoofing** (Test for IP geolocation filters and VPN detection)
+- **Credential Stuffing** (Test for protection against automated login attempts)
 
+## Setting Up the Lab
+
+### Prerequisites
+
+Ensure that the following software is installed on your local machine:
+- [Docker](https://www.docker.com/products/docker-desktop)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- A terminal or command-line interface (CLI) tool
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/yourusername/full-stack-penetration-testing-lab.git
+cd full-stack-penetration-testing-lab
+```
+
+
+
+
+
+
+// Edit this
 ## What you can demo in 2 minutes
 ### 1) Customer View (`/`)
 A simple storefront page (e.g., “Mom’s Bakery”). This **never locks**.
