@@ -1,0 +1,3 @@
+
+## Ignore the .env file which contains sensitive information such as API keys and database credentials.
+.env
