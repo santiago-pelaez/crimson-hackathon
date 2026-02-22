@@ -3,21 +3,25 @@ import './Admin.css';
 
 function Admin({ isLocked }) {
   const [threats, setThreats] = useState([
-    { id: 1, 
-      ip: '192.168.1.1', 
-      status: 'TRAPPED', 
-      time: '18:05:12' },
-    { id: 2,
-      ip: '45.122.10.1', 
-      status: 'INTERCEPTED', 
-      time: '18:08:45' }
+    {
+      id: 1,
+      ip: '192.168.1.1',
+      status: 'TRAPPED',
+      time: '18:05:12'
+    },
+    {
+      id: 2,
+      ip: '45.122.10.1',
+      status: 'INTERCEPTED',
+      time: '18:08:45'
+    }
   ]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       const newThreat = {
         id: Date.now(),
-        ip: `172.20.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
+        ip: `172.20.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
         status: 'TRAPPED',
         time: new Date().toLocaleTimeString()
       };
@@ -54,15 +58,15 @@ function Admin({ isLocked }) {
             <h3>Oven Temp</h3>
             <div className="gauge">350°F</div>
           </div>
-          
+
           <div className="log-panel">
             <h3>Live Interception Feed</h3>
             {threats.map(t => (
               <div key={t.id} className="log-entry">
-              <code>
-                [{t.time}] INTRUDER_DETECTED: {t.ip} {"->"} 
-                <span className={`status-${t.status.toLowerCase()}`}> {t.status}</span>
-              </code>
+                <code>
+                  [{t.time}] INTRUDER_DETECTED: {t.ip} {"->"}
+                  <span className={`status-${t.status.toLowerCase()}`}> {t.status}</span>
+                </code>
               </div>
             ))}
           </div>
