@@ -38,16 +38,6 @@ This application implements a **dynamic threat model** based on user behavior, s
 - **VPN and Geolocation Spoofing** (Test for IP geolocation filters and VPN detection)
 - **Credential Stuffing** (Test for protection against automated login attempts)
 
-## Setting Up the Lab
-
-### Prerequisites
-
-Ensure that the following software is installed on your local machine:
-- [Docker](https://www.docker.com/products/docker-desktop)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- A terminal or command-line interface (CLI) tool
----
-
 ## Manual Approval and Backend Terminal function
 
 ## **1. Manual Approval Process Overview**
@@ -55,12 +45,10 @@ Ensure that the following software is installed on your local machine:
 When suspicious activity is detected such as multiple failed login attempts, VPN usage, or accessing from a suspicious IP, users are evaluated and properly escalated to the **manual review queue**. This ensures legitimate users aren't incorrectly flagged as attackers and that potential threats are carefully examined before any action is taken. For most attacks, it is escallated to a threshold of 60. Human error can reasonably be categorized in the medium threshold.
 
 The **manual approval** process is facilitated through a backend terminal, which provides a real-time review of suspicious behavior. The terminal enables security personnel to observe **metadata** about each user’s activity to take appropriate action (e.g., approve access or lockout).
----
 
 ### **2. Priority System and Queues**
 
 The approval system operates on a two-tiered queue system for manual review, with a priority hierarchy to focus aid on human-errors typically evaluated at a threat level medium.
----
 
 ### **3. Backend Terminal Functionality**
 
@@ -79,6 +67,16 @@ The **backend terminal** is used for monitoring suspicious activities. System ad
 Once the metadata has been reviewed, the sys-admin can take action in a few ways:
   - **Approve Access**: If no malicious intent is detected, the user can be allowed to proceed with their access.
   - **Lock Account**: If there is suspicion but no clear malicious intent, the user's account can be temporarily locked for further review or investigation or, in contacted by the user and verified, to be physically bypassed by pressing Rasberry Pi passkey.
+
+## Setting Up the Lab
+
+### Prerequisites
+
+Ensure that the following software is installed on your local machine:
+- [Docker](https://www.docker.com/products/docker-desktop)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- A terminal or command-line interface (CLI) tool
+---
 
 ### Clone the Repository
 
