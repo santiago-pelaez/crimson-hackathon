@@ -52,7 +52,7 @@ Ensure that the following software is installed on your local machine:
 
 ## **1. Manual Approval Process Overview**
 
-When suspicious activity is detected such as multiple failed login attempts, VPN usage, or accessing from a suspicious IP, users are evaluated and properly escalated to the **manual review queue**. This ensures legitimate users aren't incorrectly flagged as attackers and that potential threats are carefully examined before any action is taken. For most attacks, it is assumed most attacks are escallated to a threshold of 60 or above, while still creating room for genuine human error.
+When suspicious activity is detected such as multiple failed login attempts, VPN usage, or accessing from a suspicious IP, users are evaluated and properly escalated to the **manual review queue**. This ensures legitimate users aren't incorrectly flagged as attackers and that potential threats are carefully examined before any action is taken. For most attacks, it is escallated to a threshold of 60. Human error can reasonably be categorized in the medium threshold.
 
 The **manual approval** process is facilitated through a backend terminal, which provides a real-time review of suspicious behavior. The terminal enables security personnel to observe **metadata** about each user’s activity to take appropriate action (e.g., approve access or lockout).
 ---
