@@ -38,7 +38,7 @@ This application implements a **dynamic threat model** based on user behavior, s
 - **VPN and Geolocation Spoofing** (Test for IP geolocation filters and VPN detection)
 - **Credential Stuffing** (Test for protection against automated login attempts)
 
-## Manual Approval and Backend Terminal function
+#### Manual Approval and Backend Terminal function
 
 ## **1. Manual Approval Process Overview**
 
