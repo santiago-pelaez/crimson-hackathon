@@ -33,9 +33,12 @@ function App() {
         <Route path="/sign_up" element={<Login />} />
         <Route path="/admin" element={
           <Admin 
+            is_locked={isLocked} 
             isLocked={isLocked} 
+            threat_level={threatLevel} 
             threatLevel={threatLevel} 
-            aiThoughts={aiThoughts} // <--- ADD THIS
+            ai_thoughts={aiThoughts} 
+            aiThoughts={aiThoughts}
           />
         } />
         <Route path="/honeypot" element={<Admin isLocked={true} threatLevel={80} />} />

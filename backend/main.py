@@ -9,6 +9,8 @@ import os
 from datetime import datetime
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
+from pathlib import Path
+import re
 from fastapi.middleware.cors import CORSMiddleware
 
 # agentic ai type shiitititii
@@ -21,34 +23,44 @@ except Exception:
 ########## END OF IMPORTS ##########
 
 ########## SETUP ##########
-# Load environment variables from .env file in the same directory
-load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
+# Load .env from repo if available (more flexible)
+env_path = Path(__file__).resolve().parent / ".env"
+if not env_path.exists():
+    env_path = Path(__file__).resolve().parent.parent / ".env"
+if env_path.exists():
+    load_dotenv(str(env_path))
+else:
+    load_dotenv()
 
 gemini_api_key = os.getenv("GEMINI_API_KEY")
-GEMINI_MODEL = "gemini-2.5-flash"
-
-# Debug print (safe, shows first few chars if key exists)
+# Debug print: show if key is loaded (first 5 chars)
 if gemini_api_key:
     print(f"DEBUG: API Key Loaded: {gemini_api_key[:5]}*****")
 else:
     print("DEBUG: GEMINI_API_KEY not set. AI features will be disabled.")
 
+GEMINI_MODEL = "gemini-2.5-flash"
 LOG_FILE = os.path.join(os.path.dirname(__file__), "logs.json")
 
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 _state_lock = threading.Lock()
-####### ENd of establishing base varibles #######
+####### End of establishing base variables #######
 
-# New State Structure based on your requirements
 system_state = {
     "is_locked": False,
     "threat_level": 0,
     "ai_thoughts": ["Sentry active. Monitoring network traffic..."],
-    "queue_status": "Green",
-    "pending_approvals": [], # Users in Yellow Queue
-    "user_data": {} # Tracks scores and attempts: { "username": {"score": 0, "attempts": 0} }
+    "queue_status": "Green",                # kept from your version
+    "pending_approvals": [],                 # from teammate
+    "user_data": {}                           # from teammate
 }
 
 def _read_logs(max_lines: int = 100) -> List[Dict]:
@@ -70,67 +82,74 @@ def run_security_check(current_user: str, metadata: dict) -> Dict:
     log_snippet = json.dumps(logs, indent=2)
 
     with _state_lock:
-        # Initialize user if new
         if current_user not in system_state["user_data"]:
             system_state["user_data"][current_user] = {"score": 0, "attempts": 0}
 
         user = system_state["user_data"][current_user]
 
-        # LOGIC: Points for failed attempts
         if metadata.get("status") == "failed":
             user["attempts"] += 1
-            user["score"] += 15 # Each failure = 15 points
+            user["score"] += 15
 
-    # AI AGENTIC CLASSIFICATION
+    # AI prompt with structured format
     prompt = f"""
-    Analyze this login attempt for user: {current_user}
+    You are the Aegis Heuristic Sentry. Analyze the login attempt and recent logs.
+    STRICT OUTPUT FORMAT (single line, no explanation):
+    VERDICT: [GREEN/YELLOW/RED] | SCORE: [0-100] | REASON: [Max 15 words explanation]
+
+    Login user: {current_user}
     Metadata: {json.dumps(metadata)}
     Recent Logs: {log_snippet}
-    RULES:
-    1. GREEN: (Score <= 30) Domestic/West Coast.
-    2. YELLOW: (Score < 60) Domestic VPN or Suspicious activity.
-    3. RED: (Score >= 60 or Non-U.S. IP). Brute force detected.
-    Provide a verdict in this format:
-    VERDICT: [GREEN/YELLOW/RED]
-    REASON: [Short professional explanation]
     """
 
+    def _parse_sentry_output(text: str) -> Dict:
+        out = {"verdict": "GREEN", "score": 0, "reason": "No reason provided."}
+        if not text: return out
+        m = re.search(r"VERDICT:\s*([A-Za-z]+)\s*\|\s*SCORE:\s*(\d{1,3})\s*\|\s*REASON:\s*(.+)", text, flags=re.IGNORECASE)
+        if m:
+            verdict = m.group(1).upper().strip()
+            try:
+                score = int(re.sub(r"[^0-9]", "", m.group(2)))
+            except:
+                score = 0
+            reason = " ".join(m.group(3).strip().split()[:15])
+            return {"verdict": verdict, "score": max(0, min(100, score)), "reason": reason}
+        return out
+
     try:
-        model = ChatGoogleGenerativeAI(api_key=gemini_api_key, model=GEMINI_MODEL, temperature=0)
-        resp = model.invoke([SystemMessage(content="You are Aegis Sentry Security."), HumanMessage(content=prompt)])
-        ai_res = str(resp.content)
+        if not ChatGoogleGenerativeAI or not gemini_api_key:
+            raise RuntimeError("AI Configuration Missing")
 
-        # Parse AI Decision
-        new_queue = "Green"
-        if "RED" in ai_res.upper(): new_queue = "Red"
-        elif "YELLOW" in ai_res.upper(): new_queue = "Yellow"
-
-        reason = ai_res.split("REASON:")[-1].strip() if "REASON:" in ai_res else ai_res
+        model = ChatGoogleGenerativeAI(
+            google_api_key=gemini_api_key,
+            model=GEMINI_MODEL,
+            temperature=0,
+            version="v1"
+        )
+        resp = model.invoke([SystemMessage(content="You are Aegis Heuristic Sentry."), HumanMessage(content=prompt)])
+        parsed = _parse_sentry_output(str(resp.content))
 
     except Exception as e:
-        print(f"AI Error: {e}")
-        new_queue = "Red" if user["score"] >= 60 else "Green"
-        reason = "Autonomous mode active. Score-based Triage."
+        print(f"CRITICAL: AI SENTRY OFFLINE - {str(e)}")
+        parsed = {
+            "verdict": ("RED" if user.get("score", 0) >= 60 else "GREEN"),
+            "score": user.get("score", 0),
+            "reason": "Autonomous mode: score-based triage."
+        }
 
     with _state_lock:
-        system_state["queue_status"] = new_queue
-        system_state["threat_level"] = user["score"]
-        system_state["ai_thoughts"] = [reason]
-
-        # RED triggers Lockdown
-        if new_queue == "Red":
+        system_state["queue_status"] = parsed["verdict"].title()   # update queue status
+        system_state["threat_level"] = parsed["score"]
+        system_state["ai_thoughts"] = [parsed["reason"]]
+        if parsed["verdict"] == "RED":
             system_state["is_locked"] = True
-            system_state["threat_level"] = max(1, system_state.get("threat_level", 0) + 1)
-        else:
-            system_state["threat_level"] = user["score"]
+        if parsed["verdict"] == "YELLOW" and metadata.get("status") == "success":
+            system_state["pending_approvals"].append({
+                "user": current_user,
+                "time": datetime.now().strftime("%H:%M:%S")
+            })
 
-        system_state["ai_thoughts"] = [reason]
-
-        # YELLOW triggers Manual Review
-        if new_queue == "Yellow" and metadata.get("status") == "success":
-            system_state["pending_approvals"].append({"user": current_user, "time": datetime.now().strftime("%H:%M:%S")})
-
-    return {"queue": new_queue, "score": user["score"]}
+    return parsed
 
 @app.get("/status")
 def get_status():
@@ -142,7 +161,13 @@ async def log_event(data: dict):
     with open(LOG_FILE, "a") as f:
         f.write(json.dumps(data) + "\n")
     analysis = run_security_check(data.get("username", "unknown"), data)
-    return {"status": "processed", "analysis": analysis}
+    return {
+        "status": "processed",
+        "analysis_result": {
+            "summary": analysis.get("reason"),
+            "details": {"verdict": analysis.get("verdict"), "score": analysis.get("score")}
+        }
+    }
 
 @app.post("/unlock")
 def unlock_system():
@@ -177,25 +202,24 @@ def get_logs():
 
 @app.post("/chat")
 async def chat_with_gemini(request: ChatRequest):
-    if not ChatGoogleGenerativeAI:
-        return {"response": "AI Module not loaded. Check dependencies."}
-    if not gemini_api_key:
-        return {"response": "Gemini API key not configured."}
+    if not ChatGoogleGenerativeAI or not gemini_api_key:
+        return {"response": "AI Module not loaded."}
 
     try:
-        # Create a prompt that includes the security logs as context
         log_context = json.dumps(request.context[-10:], indent=2)
         prompt = f"""
-        You are the Aegis Sentry AI. 
+        You are the Aegis Cyber Advisor. Answer the user question professionally and concisely. Max 3 sentences.
         Recent Security Logs: {log_context}
         User Question: {request.message}
-        
-        Provide a concise, professional security analysis or answer based on the logs provided.
         """
 
-        model = ChatGoogleGenerativeAI(api_key=gemini_api_key, model=GEMINI_MODEL, temperature=0.7)
-        resp = model.invoke([SystemMessage(content="You are Aegis Sentry Intelligence Hub."), HumanMessage(content=prompt)])
-
+        model = ChatGoogleGenerativeAI(
+            google_api_key=gemini_api_key,
+            model=GEMINI_MODEL,
+            temperature=0.7,
+            version="v1"
+        )
+        resp = model.invoke([SystemMessage(content="You are the Aegis Cyber Advisor."), HumanMessage(content=prompt)])
         return {"response": str(resp.content)}
     except Exception as e:
-        return {"response": f"Gemini Error: {str(e)}"}
+        return {"response": f"Advisor Error: {str(e)}"}
