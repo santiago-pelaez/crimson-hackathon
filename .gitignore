@@ -2,3 +2,33 @@ aegis-backend/.env
 __pycache__/
 .vscode/
 
+# SSH keys (just in case)
+*.key
+*.pem
+*.priv
+
+# Environment variables (if you create any)
+.env
+*.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code settings (personal)
+.vscode/
+*.code-workspace
+
+# Log files
+*.log
+hardware-daemon/*.log
+
+# Local database
+*.db
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db
