@@ -3,10 +3,8 @@
 
 Aegis Labyrinth is a hackathon MVP that combines:
 - **Selective Freeze**: only sensitive admin actions “lock”
-- **Deception (Labyrinth honeypot)**: suspicious users get routed into a decoy admin panel
-- **Physical authorization**: a **real button** on a Raspberry Pi unlocks the admin vault
+- **Physical authorization**: a **physical button** on a Raspberry Pi to grant access to authroized users
 - **Hardware visibility**: a **Grove LCD RGB Backlight** shows threat level + state in real time
-- **Optional agentic AI**: CrewAI/LLM generates explanations & incident reports
 
 Theme: **REINVENT THE WHEEL**  
 We reinvent a static firewall “wall” into a **maze** with a **physical deadlock** that can’t be bypassed remotely.
