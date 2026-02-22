@@ -8,7 +8,7 @@ This repository contains a full-stack web application built for penetration test
 The environment allows security professionals and penetration testers to **simulate** a brute force attack and malicious login attempts, while training an API to monitor and react to suspicious activities.
 
 ### Key Components
-- **Frontend**: The web interface simulates a bakery and an log on portal using React.js.
+- **Frontend**: The web interface simulates a bakery and a log on portal using React.js.
 - **Backend**: The backend is in python built using FastAPI, which utilizes LLM Gemini 2.5 Flash to assess suspicious activity.
 - **Database**: A test database to contain user data for testing. (For the home stretch)
 - **Docker**: a fully containerized environment using Docker for easy setup and testing.
